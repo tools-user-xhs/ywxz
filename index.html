@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>业务现状分析</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f6f7fb;color:#1f2937;font-size:14px;line-height:1.6}
+header{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:20px 24px}
+header h1{margin:0;font-size:20px}
+header p{margin:4px 0 0;opacity:.85;font-size:13px}
+main{max-width:1180px;margin:0 auto;padding:20px}
+section{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+section h2{margin:0 0 4px;font-size:16px;display:flex;align-items:center;gap:8px}
+section h2 .num{background:#2563eb;color:#fff;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex:none}
+.hint{color:#6b7280;font-size:12.5px;margin:0 0 12px}
+textarea{width:100%;min-height:130px;padding:12px;border:1px solid #d1d5db;border-radius:8px;font-family:inherit;font-size:14px;resize:vertical;outline:none}
+textarea:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+button{cursor:pointer;border:none;border-radius:8px;padding:9px 16px;font-size:13.5px;font-family:inherit;background:#2563eb;color:#fff;transition:.15s}
+button:hover{filter:brightness(1.08)}
+button:disabled{opacity:.55;cursor:not-allowed}
+button.ghost{background:#fff;color:#374151;border:1px solid #d1d5db}
+button.mini{padding:2px 8px;font-size:12px;background:#f3f4f6;color:#b91c1c;border:1px solid #e5e7eb}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+select{padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-family:inherit;font-size:13.5px;background:#fff}
+.badge{display:inline-block;background:#eff6ff;color:#1d4ed8;border-radius:6px;padding:1px 8px;font-size:12px;margin-right:6px}
+.badge.hi{background:#fee2e2;color:#b91c1c}
+.badge.mid{background:#fef3c7;color:#92400e}
+.badge.lo{background:#f3f4f6;color:#4b5563}
+.card{border:1px solid #e5e7eb;border-left:4px solid #dc2626;border-radius:10px;padding:12px 14px;margin-top:10px;background:#fff}
+.card.p2{border-left-color:#d97706}
+.card.p3{border-left-color:#9ca3af}
+.card h4{margin:0 0 6px;font-size:14.5px}
+.card .meta{font-size:12.5px;color:#6b7280;margin:2px 0}
+.card .fix{background:#f0fdf4;border:1px dashed #86efac;border-radius:6px;padding:7px 10px;margin-top:8px;font-size:13px;color:#166534}
+.card .layer{font-size:12px;color:#7c2d12;background:#fff7ed;border-radius:5px;padding:2px 8px;display:inline-block;margin-bottom:6px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border:1px solid #e5e7eb;padding:6px 8px;text-align:left;vertical-align:middle}
+th{background:#f9fafb;font-weight:600;font-size:12.5px;color:#374151}
+td input:not([type=checkbox]){width:100%;border:1px solid transparent;background:transparent;padding:4px 6px;border-radius:5px;font-family:inherit;font-size:13px}
+td input:not([type=checkbox]):focus{border-color:#93c5fd;background:#fff;outline:none}
+td.c{text-align:center}
+.chart{border:1px solid #e5e7eb;border-radius:10px;padding:8px;margin-top:12px;background:#fff;overflow:auto;min-height:120px}
+.chart .placeholder{color:#9ca3af;padding:30px;text-align:center;font-size:13px}
+.maturity{display:flex;align-items:center;gap:8px;margin-top:8px}
+.bar{flex:1;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,#f59e0b,#16a34a)}
+.deep-card{border:2px solid #f97316;border-radius:12px;margin-top:16px;overflow:hidden;background:#fff}
+.deep-head{background:linear-gradient(90deg,#ea580c,#f97316);color:#fff;padding:10px 14px;font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.deep-head .icon{font-size:18px}
+.deep-head .layer-tag{background:rgba(255,255,255,.22);border-radius:4px;padding:1px 8px;font-size:11.5px;font-weight:600;margin-left:6px}
+.deep-head .src-tag{background:rgba(255,255,255,.32);border-radius:4px;padding:1px 8px;font-size:11px;font-weight:600;margin-left:4px}
+.deep-body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0}
+@media(max-width:900px){.deep-body{grid-template-columns:1fr}}
+.deep-col{padding:12px 14px;border-right:1px solid #fed7aa}
+.deep-col:last-child{border-right:none}
+.deep-col h5{margin:0 0 8px;font-size:13.5px;display:flex;align-items:center;gap:6px}
+.deep-col .tag{display:inline-block;padding:1px 8px;border-radius:4px;font-size:11px;font-weight:700}
+.deep-col .tag.fire{background:#fee2e2;color:#b91c1c}
+.deep-col .tag.search{background:#fef3c7;color:#92400e}
+.deep-col .tag.shield{background:#dcfce7;color:#15803d}
+.deep-col .owner{font-size:12px;color:#6b7280;margin:2px 0 6px}
+.deep-col ol{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:#374151}
+.deep-col ol li{margin:4px 0}
+.deep-col .metric{margin-top:8px;font-size:12.5px;background:#f0fdf4;border-radius:6px;padding:5px 8px;color:#166534;font-weight:600}
+.deep-col .warn{margin-top:8px;font-size:12.5px;background:#fef2f2;border:1px dashed #fca5a5;border-radius:6px;padding:6px 8px;color:#991b1b;font-weight:600}
+.pilot{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:16px;margin-top:14px}
+.pilot h4{margin:0 0 4px;font-size:15px}
+.pilot table{background:#fff}
+.pilot-step{display:flex;gap:12px;padding:12px 0;border-bottom:1px dashed #fde68a}
+.pilot-step:last-child{border-bottom:none}
+.pilot-day{flex:none;width:86px;text-align:center;font-weight:700;color:#b45309;font-size:13px;background:#fef3c7;border-radius:6px;padding:4px 6px;height:fit-content}
+.pilot-body{flex:1;min-width:0}
+.pilot-body h5{margin:0 0 6px;font-size:13.5px;color:#92400e}
+.pilot-body p{margin:4px 0;font-size:13px}
+.pilot-body ul{margin:4px 0;padding-left:18px;font-size:13px}
+.pilot-input{border:1px solid #fbbf24;background:#fffbeb;padding:4px 8px;border-radius:5px;font-family:inherit;font-size:13px;width:220px;max-width:100%}
+.pilot-input:focus{outline:none;border-color:#d97706;background:#fff}
+.record-table input{width:100%;border:1px solid #e5e7eb !important;background:#fff !important;padding:4px 6px;border-radius:5px;font-family:inherit;font-size:12.5px}
+.record-table input:focus{border-color:#f59e0b !important;outline:none}
+.record-table td{padding:3px 5px}
+dialog{border:none;border-radius:12px;padding:20px;width:min(520px,92vw);box-shadow:0 10px 40px rgba(0,0,0,.2)}
+dialog input{width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;margin-bottom:10px;font-family:inherit;font-size:13px}
+label{font-size:12.5px;color:#374151;display:block;margin-bottom:3px}
+small.muted{color:#9ca3af}
+.err{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:8px;padding:10px 12px;font-size:13px;margin-top:10px;white-space:pre-wrap}
+.ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;border-radius:8px;padding:8px 12px;font-size:13px;margin-top:10px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:12.5px;color:#4b5563}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.tag{display:inline-block;padding:1px 7px;border-radius:4px;font-size:11.5px;font-weight:600;margin-right:4px}
+.dot{width:12px;height:12px;border-radius:3px;display:inline-block;flex:none}
+.chain{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin-top:12px;font-size:13px}
+.chain .step{display:inline-block;background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:4px 10px;margin:4px 4px 4px 0;font-size:12.5px}
+.chain .arrow{color:#94a3b8;margin:0 4px;font-weight:700}
+.chain .step.root{background:#fef3c7;border-color:#fbbf24}
+.chain .step.core{background:#fee2e2;border-color:#f87171;font-weight:700}
+.chain .step.result{background:#f3f4f6;border-color:#9ca3af}
+.pill-start{background:#dbeafe;border:1.5px solid #3b82f6;color:#1d4ed8;border-radius:15px;padding:4px 14px;font-weight:700;font-size:12.5px}
+.pill-end{background:#dcfce7;border:1.5px solid #22c55e;color:#15803d;border-radius:15px;padding:4px 14px;font-weight:700;font-size:12.5px}
+.incomplete-card{border:2px solid #f59e0b;background:#fffbeb;border-radius:12px;padding:16px 18px;margin-top:14px}
+.incomplete-card h4{margin:0 0 10px;font-size:15px;color:#92400e;display:flex;align-items:center;gap:8px}
+.incomplete-card .lead{font-size:13.5px;color:#374151;margin:0 0 10px}
+.incomplete-card .gap-list{margin:8px 0;padding-left:0;list-style:none}
+.incomplete-card .gap-list li{background:#fff;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin:6px 0;font-size:13px;color:#374151;display:flex;align-items:flex-start;gap:8px}
+.incomplete-card .gap-list li .num{flex:none;width:20px;height:20px;background:#f59e0b;color:#fff;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-top:1px}
+.incomplete-card .tip{margin-top:14px;padding:12px 14px;background:#fff;border:1px dashed #fbbf24;border-radius:8px;font-size:13px;color:#78350f;line-height:1.7}
+.incomplete-card .tip em{font-style:normal;font-weight:600;color:#b45309;background:#fef3c7;padding:1px 4px;border-radius:3px}
+.incomplete-card .tip b{color:#92400e}
+</style>
+</head>
+<body>
+<header>
+  <h1>业务现状分析</h1>
+  <p>现状诊断 → AS-IS 泳道图 → 深度改进方案（应急 + 根因 + 预防）+ TO-BE 图 + 可执行试点</p>
+</header>
+
+<main>
+  <section>
+    <h2><span class="num">1</span>现状分析</h2>
+    <p class="hint">用大白话描述你看到的业务现状。越具体越好，特别是那些"出了错怎么处理"的细节。</p>
+    <textarea id="rawText" placeholder="例：小红作为董事长助理，在降本增效项目中担任统筹，副总多次不回消息，向董事长反映后副总被批评，之后更不配合……"></textarea>
+    <div class="toolbar">
+      <button id="btnAnalyze">🔍 分析现状</button>
+      <button class="ghost" id="btnDemo">填入示例</button>
+      <button class="ghost" id="btnCfg">⚙️ AI 设置</button>
+      <small class="muted" id="cfgState"></small>
+    </div>
+    <div id="analysisOut"></div>
+  </section>
+
+  <section>
+    <h2><span class="num">2</span>推测业务流程（AS-IS）</h2>
+    <p class="hint">系统根据现状推测当前流程。表格内容可编辑，勾选「瓶颈」标记卡点环节。</p>
+    <div class="toolbar">
+      <label style="margin:0">流程域</label>
+      <select id="asIsDomain"></select>
+      <button id="btnGuess">🧩 推测业务流程</button>
+      <button class="ghost" id="btnAddStep">+ 添加步骤</button>
+      <button class="ghost" id="btnDrawAsIs">📈 生成现状流程图</button>
+    </div>
+    <div style="margin-top:12px;overflow:auto">
+      <table>
+        <thead><tr>
+          <th style="width:44px">#</th><th style="width:170px">角色</th><th>活动 / 步骤</th>
+          <th style="width:60px">瓶颈</th><th style="width:80px">操作</th>
+        </tr></thead>
+        <tbody id="asIsBody"></tbody>
+      </table>
+    </div>
+    <div class="chart" id="asIsChart"><div class="placeholder">点击「推测业务流程」后自动出图</div></div>
+    <div class="legend">
+      <span><i class="dot" style="background:#fff;border:1.5px solid #cbd5e1"></i>普通活动</span>
+      <span><i class="dot" style="background:#fef2f2;border:2px solid #dc2626"></i>瓶颈环节</span>
+      <span><span class="pill-start">开始</span>①号节点正上方</span>
+      <span><span class="pill-end">结束</span>末尾节点正下方</span>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">3</span>改进建议与目标流程（TO-BE）</h2>
+    <p class="hint">选择目标流程，一键生成：① 带问题标注的 TO-BE 泳道图；② 每个关键问题的「应急 + 根因 + 预防」深度方案；③ 逐日试点手册。</p>
+    <div class="toolbar">
+      <label style="margin:0">目标流程</label>
+      <select id="targetDomain"></select>
+      <button id="btnImprove">🚀 生成改进建议与目标流程</button>
+    </div>
+    <div id="improveOut"></div>
+  </section>
+</main>
+
+<dialog id="cfgDlg">
+  <h3 style="margin-top:0">AI 设置（OpenAI 兼容接口，可选）</h3>
+  <label>Base URL</label><input id="cfgBase" placeholder="https://api.openai.com/v1">
+  <label>API Key</label><input id="cfgKey" type="password" placeholder="sk-...">
+  <label>模型</label><input id="cfgModel" placeholder="gpt-4o-mini">
+  <div class="toolbar">
+    <button id="cfgSave">保存</button><button class="ghost" id="cfgClear">清除</button><button class="ghost" id="cfgClose">关闭</button>
+  </div>
+  <p><small class="muted">不配置也能用：内置规则引擎同样完成分析、推测、改进全流程。</small></p>
+</dialog>
+
+<script>
+/* =========================================================
+ * 0. 流程库（15 域）
+ * =======================================================*/
+var FLOW_LIB = {
+  "战略与经营管理":[["董事会 / 高层","市场洞察与战略输入"],["高层","战略规划与目标设定"],["高层 / 财务","目标分解与预算编制"],["各业务单元","年度 / 季度经营计划编制"],["各业务单元","经营计划执行与数据上报"],["运营 / 财务","经营分析会与偏差复盘"],["高层","策略调整与绩效评价"]],
+  "市场与品牌营销":[["市场部","市场调研与竞品分析"],["市场部","品牌定位与年度营销规划"],["市场部","内容 / 活动策划与预算申请"],["市场部 / 外部供应商","物料与内容生产"],["市场部","渠道投放与线索获取"],["市场部 / 销售","线索分发与转化跟进"],["市场部","投放效果复盘与预算调整"]],
+  "销售与客户管理":[["市场 / 销售","线索获取与初步筛选"],["销售","客户拜访与需求确认"],["销售 / 商务","报价与成本核算"],["销售 / 法务 / 财务","合同评审与锁价审批"],["销售","合同签订与订单录入"],["交付 / 项目","订单交付与实施"],["财务 / 销售","开票与回款跟进"],["销售 / 客服","价格调整沟通与客户谈判"],["客服","客户回访与二次开发"]],
+  "产品研发与创新":[["产品","需求收集与市场验证"],["产品 / 研发","立项评审与资源确认"],["产品","需求文档与原型设计"],["研发","技术方案与开发排期"],["研发","编码 / 设计实现与自测"],["测试","测试验证与缺陷修复"],["产品 / 研发","发布上线与灰度验证"],["产品","数据复盘与版本迭代"]],
+  "采购与供应商管理":[["需求部门","需求提报与规格确认"],["采购","供应商寻源与比价"],["采购 / 质量","供应商评审与准入"],["采购 / 法务","合同谈判与签订"],["需求部门 / 采购","下单与交期跟进"],["仓储 / 质量","到货验收与入库"],["财务","对账与付款结算"],["采购","供应商绩效评估与淘汰"]],
+  "生产制造与计划":[["销售 / 计划","订单评审与主生产计划"],["计划 / 技术","物料主数据校验与选择编码"],["计划","物料需求计划（MRP）运算"],["采购 / 仓储","物料齐套与备料"],["生产","生产排程与工单下达"],["生产","工序加工与过程检验"],["质量","成品检验与放行"],["仓储","成品入库与发货"],["生产 / 计划","产量与效率复盘"]],
+  "质量管理":[["质量","质量标准与检验规范制定"],["采购 / 质量","来料检验（IQC）"],["生产 / 质量","过程检验（IPQC）"],["质量","成品检验（OQC）与放行"],["质量 / 生产","不合格品评审与处置"],["质量 / 责任部门","纠正预防措施（CAPA）"],["质量","客诉处理与质量复盘"]],
+  "仓储与物流配送":[["计划 / 销售","出入库需求提报"],["仓储","收货与质检交接"],["仓储","上架与库位管理"],["仓储","拣货与复核"],["仓储","打包与出库交接"],["物流","承运商选择与运输"],["客服 / 仓储","签收确认与异常处理"],["仓储 / 财务","库存盘点与账实核对"]],
+  "客户服务与售后":[["客服","多渠道受理与工单创建"],["客服","问题分级与派单"],["客服 / 销售","投诉安抚与客户沟通"],["技术 / 售后","远程诊断或上门服务"],["售后","备件申请与更换"],["客服 / 技术","解决方案确认与关闭"],["客服","满意度回访"],["客服 / 质量","问题归因与改进反馈"]],
+  "人力资源与人才管理":[["用人部门 / HR","人力需求提报与审批"],["HR","招聘渠道发布与简历筛选"],["HR / 用人部门","面试评估与录用审批"],["HR","Offer 发放与入职准备"],["HR / 行政","入职办理与培训"],["HR / 用人部门","试用期考核与转正"],["HR / 各部门","绩效目标设定与评估"],["HR / 财务","薪酬核算与激励发放"],["HR","员工发展与离职管理"]],
+  "财务与资金管理":[["各部门","预算编制与审批"],["业务部门","费用 / 付款申请提报"],["部门负责人 / 财务","单据审核与审批"],["财务","付款执行与资金调度"],["财务","账务处理与成本核算"],["财务","开票与应收管理"],["财务","月度 / 季度结账与报表"],["管理层 / 财务","经营分析与预算复盘"]],
+  "法务与合规风控":[["业务部门","合同 / 法律事项申请"],["法务","条款审查与风险提示"],["法务 / 业务","谈判修改与定稿"],["法务","用印与合同归档"],["法务 / 合规","合规检查与风险识别"],["法务 / 审计","违规调查与整改跟踪"],["管理层 / 法务","风险报告与制度更新"]],
+  "IT 与数字化建设":[["业务部门","需求提出与价值论证"],["IT / 业务","需求评审与优先级排序"],["IT","方案设计与选型"],["IT / 主数据专员","物料主数据治理与编码状态管理"],["IT / 供应商","开发或采购实施"],["IT / 业务","测试验证与 UAT"],["IT","上线发布与培训"],["IT","运维监控与故障响应"],["IT / 业务","效果评估与迭代优化"]],
+  "行政与后勤管理":[["需求部门","行政需求提报"],["行政","供应商 / 资源安排"],["行政","审批与预算确认"],["行政 / 供应商","服务执行（办公 / 差旅 / 车辆 / 食堂等）"],["行政","验收与费用结算"],["行政","资产登记与盘点"],["行政","服务满意度回访"]],
+  "项目管理与跨部门协同":[["董事长 / 高管","降本增效项目立项与授权"],["项目负责人 / 高管","项目治理架构与责任分配"],["PM / 助理","项目进度分发与催办"],["PM / 各职能","任务分解与责任分配"],["PM","执行跟踪与例会同步"],["PM","风险与变更管理"],["PM / 质量","阶段评审与交付验收"],["PM","项目复盘与知识沉淀"]]
+};
+
+var DOMAIN_KW = {
+  "销售与客户管理":["销售","客户","订单","报价","商机","签单","回款","合同签订","催货","锁价","二次加价","客户投诉","客户信任","价格调整"],
+  "采购与供应商管理":["采购","供应商","比价","询价","请购"],
+  "生产制造与计划":["生产订单","生产","车间","排产","产能","产线","制造","工单","BOM"],
+  "仓储与物流配送":["仓库","库存","仓储","发货","物流","拣货","盘点","配送","货不对板","错发"],
+  "质量管理":["质量","检验","不良","返工","质量投诉","合格率","退货"],
+  "产品研发与创新":["研发","产品","开发","版本","迭代","设计","开发团队"],
+  "市场与品牌营销":["市场","品牌","推广","投放","营销","活动","获客"],
+  "人力资源与人才管理":["招聘","人力","员工","绩效","薪酬","入职","离职","培训","试用期"],
+  "财务与资金管理":["财务","报销","付款","预算","发票","对账","成本核算","毛利","汇总表"],
+  "客户服务与售后":["客服","售后","服务","投诉受理","工单","满意度"],
+  "IT 与数字化建设":["系统","IT","信息化","数字化","上线","ERP","数据打通","物料主数据","主数据","编码","选错编码","一物多码"],
+  "法务与合规风控":["法务","合规","风险","审计","用印","合同条款"],
+  "行政与后勤管理":["行政","办公","差旅","车辆","后勤","食堂"],
+  "项目管理与跨部门协同":["项目","跨部门","协同","交付节点","周例会","会议纪要","进度表","周报","助理","降本增效","统筹","副总","董事长","越级","告状"],
+  "战略与经营管理":["战略","经营","目标","规划","复盘","年度计划"]
+};
+
+/* =========================================================
+ * 1. 深度改进方案库
+ * =======================================================*/
+var DEEP_FIX_LIB = {
+  customer_price_hike: {
+    name: "客户被二次加价 / 客户信任受损", icon: "💔",
+    layer: "核心矛盾层", weight: 1,
+    keywords: ["二次加价","二次涨价","向客户加价","跟客户加价","客户投诉","客户不满","信任危机","客户信任","客户流失","价格调整"],
+    emergency: { title:"立即处理（24小时内，从'硬加价'转为'可接受加价'）", owner:"销售总监牵头，销售经理 + 商务配合",
+      steps:["停止业务员单兵沟通：所有进行中的加价沟通，立即从业务员升级到销售经理 / 总监层面","客户分级，差异化沟通：大客户总监亲自上门；中客户经理电话 + 书面说明；小客户统一标准话术批量通知","给客户提供「选择套餐」：本单加价 + 增值服务，或本单维持原价但下一单起执行新价，或分批交付锁定一半老价格","准备标准「解释脚本」：不说'我们编码错了'，要说市场行情变化 + 公司已内部消化大部分成本 + 只是部分传导","给一线让价授权：允许销售在现场给到 3%-5% 的价格浮动空间或等值赠品额度","同步准备「失去客户预案」：明确保本底线，低于底线走审批"] },
+    rootCause: { title:"根因分析（3天内）", owner:"销售总监 + 商务 + 客服", tool:"加价沟通复盘 + 客户反馈分析",
+      steps:["查沟通方式：之前的加价沟通是电话、微信还是面谈？是业务员还是经理？","查客户分级：大客户和小客户用了同一种沟通方式吗？","查话术问题：业务员说的是'公司要加价'还是'市场涨价 + 公司承担了大部分'？","查时机：是在交付前、交付中还是交付后加价？","查谈判能力：业务员有没有接受过价格谈判训练？","查合同条款：报价时有没有锁价期？有没有价格调整约定？"] },
+    prevention: { title:"系统预防（2周内落地）", owner:"销售总监 + 商务 + 法务 + 客服", metric:"客户加价接受率大于 70%，客户投诉率下降 50%",
+      steps:["客户分级与差异化沟通策略：A 级客户总监亲自谈 + 给足补偿；B 级客户经理谈 + 增值服务；C 级客户标准话术 + 批量通知","建立「价格调整标准 SOP」：提前 15 天通知 → 总监审核沟通话术 → 给客户提供至少 2 个选择 → 记录沟通结果","价格调整谈判授权机制：一线有 3%-5% 让价权，销售经理有 8% 让价权，超过走总监审批","标准化谈判话术库","成本偏差早期预警：报价时成本偏差超过 3% 立即预警","锁价条款前置","销售价格谈判训练：每季度一次"] }
+  },
+
+  material_master_data: {
+    name: "物料主数据混乱 / 一物多码治理", icon: "🗂️",
+    layer: "根因层", weight: 2,
+    keywords: ["物料主数据","主数据混乱","编码选错","选错编码","物料编码","一物多码","一码多物","编码混乱","主数据","重复编码","编码重复","一物多号"],
+    emergency: { title:"发现一物多码时（24小时内，绝对禁止直接删除）", owner:"主数据专员 + IT + 业务部门代表",
+      steps:["⚠️ 第一条铁律：立即冻结所有涉及编码，禁止新建、禁止修改、禁止删除——但绝不物理删除","影响评估：对每个重复编码列一张「影响评估表」，逐项填写在途订单、库存、BOM、合同、供应商、最近使用时间","确定主从关系：从重复编码中选出唯一一个「主编码」，其余编码标记为「别名编码」","建立编码映射表：别名编码 → 主编码，一次性写入系统","别名编码状态改为「冻结」而非「删除」","上报评审：涉及在途订单超过 5 个或库存金额超过阈值，必须多部门联合评审","记录决策日志：谁、何时、为什么选择这个主编码"] },
+    rootCause: { title:"根因分析（3天内，不是查一个人，是查整个机制）", owner:"IT + 运营 + HR", tool:"主数据体检 + 5Why + 人员变动追溯",
+      steps:["追溯历史：一物多码是从什么时候开始出现的？当时是谁有建码权限？","人员变动追溯：过去 2 年主数据专员换了几任？每次交接有没有完整清单？","权限盘点：现在有多少个账号可以新建物料？是统一入口还是各部门各自建？","定义统一性：同一种物料，销售叫 A、生产叫 B、采购叫 C，三个部门各建一次码","流程缺口：新建物料时系统有没有强制查重？是比编码字符串还是多维属性？","历史包袱：老编码绑定在途业务，形成「越积越多、越不敢动」的死循环","激励问题：主数据专员有没有明确的 KPI？"] },
+    prevention: { title:"系统预防（分三阶段，2-3 个月内落地）", owner:"IT 主数据负责人 + 运营 + HR + 各业务部门", metric:"一物多码存量在 3 个月内清零 80%，新增重复编码率小于 0.1%",
+      steps:["【阶段一：存量治理（前 4 周）】全量主数据体检、分类处理、编码状态机（活跃→冻结→归档→关闭）、编码映射表","【阶段二：新增防错（第 2 个月起）】统一入口、多维查重、命中走合并申请、权限收口","【阶段三：变更管控 + 人员交接（第 3 个月起）】变更日志、双人复核、人员变动交接清单、季度体检","【长期机制】主数据专员轮岗前 2 周交接期","【制度配套】明确一物多码的责任归属","【工具建议】编码录入框旁加相似编码提示"] }
+  },
+
+  quotation_cost_control: {
+    name: "报价成本核算失控", icon: "💵",
+    layer: "传导层", weight: 3,
+    keywords: ["报价成本","报价错","成本核算","成本错","成本乱","核价","报价错误","成本数据","报价出问题","报价不准"],
+    emergency: { title:"立即处理（24小时内）", owner:"财务 + 商务", steps:["暂停所有基于错误编码的报价单","重新核算：对受影响订单，用正确编码重新核算成本","对账确认：财务与商务对齐，确认实际损失金额","逐单处理"] },
+    rootCause: { title:"根因分析（3天内）", owner:"财务 + 商务 + IT", tool:"报价流程复盘", steps:["报价时用的成本数据从哪来？","谁核价？核价流程是什么？有没有二次校验？","报价单发出前有没有审批？","系统为什么不能自动带出正确成本？","类似'报价出错'过去发生过几次？"] },
+    prevention: { title:"系统预防（2周内落地）", owner:"财务总监 + 商务总监 + IT", metric:"报价成本偏差率小于 1%，报价复核覆盖率 100%", steps:["报价成本必须从系统主数据自动带出，禁止手工录入","三级校验：业务员填 → 主管核 → 财务审","报价成本偏差预警：偏差超过 5% 触发强制复核","报价单审批：超过一定金额必须总监审批","成本数据库定期校准：每月与财务对账"] }
+  },
+
+  cross_dept_blame: {
+    name: "跨部门扯皮 / 责任不清", icon: "🤝",
+    layer: "组织层", weight: 4,
+    keywords: ["扯皮","推诿","责任不清","踢皮球","相互推","谁的责","扯不清","没人管","都不负责"],
+    emergency: { title:"立即处理（当天）", owner:"运营负责人 / 分管副总", steps:["指定唯一责任人：一个问题只有一个 owner","建立问题台账：问题描述 / 责任人 / 涉及部门 / 时限 / 状态","每日站会同步：15 分钟","首问负责制：谁先接到问题谁负责跟进到底"] },
+    rootCause: { title:"根因分析（1周内）", owner:"运营 + HR", tool:"RACI 盘点 + 责任追溯", steps:["查本次问题：编码选错的责任在谁？","查客户沟通的责任在谁？","查机制：有没有明确的 RACI 矩阵？","查文化：为什么出了问题大家第一反应是甩锅？","查历史：过去 6 个月类似的扯皮发生了多少次？"] },
+    prevention: { title:"系统预防（2周内落地）", owner:"运营 + HR + 各部门负责人", metric:"跨部门问题平均解决周期下降 50%", steps:["建立 RACI 矩阵","问题追责机制：追流程的责，不追个人的责","跨部门问题处理 SOP","首问负责制写入制度","月度复盘会"] }
+  },
+
+  /* ============ 新增：越级推动反噬 / 层级错配死循环 ============ */
+  cross_level_backfire: {
+    name: "越级推动反噬 / 层级错配死循环", icon: "🌀",
+    layer: "核心矛盾层", weight: 4.3,
+    keywords: [
+      "越级","告状","打小报告","越级汇报","向上告","反映情况","董事长","老板","总经理","副总","副总裁","VP",
+      "试用期","没授权","没有授权","无授权","没根基","新人",
+      "降本增效","改革项目","统筹","主导","推动高管",
+      "恶性循环","死循环","越来越不配合","不配合副总","推动副总","催副总",
+      "被批评","点名批评","公开批评","得罪","被针对","被记恨"
+    ],
+    emergency: {
+      title: "立即停火（24小时内，越推越死，先停）",
+      owner: "当事人（如小红）+ 董事长（直属领导）+ HRBP（如有可能）",
+      steps: [
+        "⛔ 立刻停止一切直接推动副总的动作：不再发消息、不再当面催、不再私下找。副总已经把'被批评'和你绑定在一起了，任何再次推动都会强化'你在针对我'的印象",
+        "🕊️ 主动约副总单独面谈一次（关键是当面，不是微信；关键是致歉+请教，不是继续催）：'X总，前阵子在项目进度上给您添麻烦了。我在试用期，很多事拿不准，下次凡是涉及您这边的工作，我想先来跟您请教，避免让您觉得是越级汇报。'——把'对手'关系降级成'请教'关系",
+        "📋 向董事长做一次'复盘汇报'：不是继续告状，而是主动承认自己推动方式有问题，请求调整项目组织架构。话术参考：'董事长，项目进度我盯得比较紧，但跨层级推动经验不足，给您也添了麻烦。我想请教：这个项目是不是应该由一位有权限的高管牵头，我做执行秘书更合适？'",
+        "🏛️ 建议由一位有行政权限的高管（总经理 / 分管副总 / 董事长本人）挂帅项目，自己转为执行秘书 / 协调支持角色：只做会议记录、进度汇总、资料整理，不负责推动高管。把'推动'这个动作从你身上剥离出去",
+        "🗓️ 建立项目周会机制：让进度在公开场合对账，不靠个人催办。所有部门在周会上当面汇报，你只做主持+记录，不做'个人催办者'",
+        "🛡️ 试用期自我保护：向直属领导（董事长）明确一句话——'我的职责是统筹和执行，但跨层级推动需要相应的授权或机制。如果这条路径不通，请您帮我调整角色，或者换一位更合适的人牵头'。把选择权交回给董事长，而不是自己硬扛",
+        "🧯 如果上述都没效果，认真考虑是否要退出这个角色：试用期保命 > 项目荣誉。这个项目如果是政治雷区，跳出来是理性选择"
+      ],
+      warn: "越级汇报是最后一张牌，用掉之后短期内不能再有第二次。停下来，是现在唯一正确的动作。"
+    },
+    rootCause: {
+      title: "根因分析（3天内，这不是'沟通问题'，是结构性政治问题）",
+      owner: "当事人 + HRBP + 董事长（如可能）",
+      tool: "权力-利益-身份三维分析 + 5Why",
+      steps: [
+        "【层级错配】当事人是助理，推动对象是副总——级别差了好几级，凭什么听助理的？'无授权'不是原因，'层级错配'才是根本。任何靠个人努力弥补层级差的做法都会失败",
+        "【项目性质】降本增效必然触及利益，副总可能是被'增效'的人。他的抵触不一定是针对当事人，可能是针对这个项目本身——当事人把'抵触项目'误读成'抵触我'",
+        "【授权缺失】试用期没有正式书面授权，说话不算数。公司让一个没授权的人推动高管，本质是'甩锅'——成了是领导的功劳，不成是当事人协调不力",
+        "【越级反噬】当事人向董事长反映问题，虽然是职责所在，但从副总的视角就是'被告状'，工作问题升级为人际对立。这是越级汇报的必然代价，必须提前预判",
+        "【老板处理方式】董事长直接把副总叫来批评，而不是做中立协调（如'项目进度整体偏慢，我们开个专题会'），把当事人推到副总的对立面——老板的处理方式，是恶性循环的关键推手",
+        "【身份弱势】试用期 + 助理 + 年轻，副总天然不认可。这不是当事人能力问题，是身份决定的话语权问题",
+        "【沟通方式】靠微信、靠偶遇、靠私下问——没有正式渠道。对高管必须走正式渠道（邮件 / 会议 / 正式周报），而不是'私聊'",
+        "【权力格局】公司里，副总和董事长之间的关系本身就是政治，当事人的动作可能触发了更大的博弈。要识别自己是'棋子'还是'执棋人'"
+      ]
+    },
+    prevention: {
+      title: "跳出死循环（4周内调整项目治理结构，长期看机制）",
+      owner: "董事长 + 项目发起人 + HRBP",
+      metric: "项目能在不依赖个人推动的情况下正常运转，当事人不再成为矛盾焦点",
+      steps: [
+        "【核心：项目治理结构重设】由董事长或一位有权限的高管担任项目发起人 / 组长，当事人转为执行秘书。层级高的活交给层级高的人干——把'推动'从人变成'职务职责'",
+        "【政治路径设计】识别项目涉及的所有利益相关方：谁是受益者、谁是受损者、谁是中立者。降本增效项目尤其要注意——受损方需要被单独沟通、被给补偿、被给台阶",
+        "【授权补位】即使不给当事人授权，也要把项目负责人明确为有权限的人。向董事长建议：'项目负责人您来当，我做您的执行秘书'——把'助理催副总'变成'董事长让副总配合'，性质完全不同",
+        "【老板的角色：公开站台+中立协调】董事长不是在办公室批评副总，而是在项目启动会上公开宣布：'这个项目由 X 总牵头，XX 协助，所有部门配合'。把当事人从'靶子'变成'传声筒'",
+        "【机制替代人情】周会 + 书面汇报 + 公开对账。所有进度在项目周会上公开对账，当事人只做会议记录与汇总。不靠当事人个人催办，用会议机制推动",
+        "【沟通方式改变】副总不是被催的对象，是被请教的专家。当事人摆出'我是新人，需要您指导'的姿态，而不是'代表老板来检查你'——同样的意思，姿态一变，接受度完全不同",
+        "【试用期自我保护】留痕 + 明确边界 + 及时沟通：所有推动记录留痕；向直属领导明确职责边界；如果环境无法改变，考虑换岗位或退出项目",
+        "【越级汇报的铁律】越级汇报是最后一张牌，用掉之前先想三遍：能用层级解决就不用越级；能私下解决就不公开；能书面解决就不当面。这次用掉了，短期内不能再有第二次",
+        "【职场政治敏感度】对涉利项目，推动之前先做'政治路径设计'——谁支持、谁反对、谁中立、如何让反对者不成为阻力。不要单纯用'工作方法'应对'政治问题'",
+        "【长期预案】如果这个环境长期无法提供'机制支撑'，只依赖个人情商硬扛，那么：要么主动调整岗位，要么慎重考虑这家公司是否值得留。试用期是双向选择"
+      ]
+    }
+  },
+  /* ============================================================ */
+
+  unauthorized_coordination: {
+    name: "无授权协调 / 跨角色推动无力", icon: "📣",
+    layer: "组织层", weight: 4.5,
+    keywords: [
+      "助理","协调","推动不动","推动无力","推动不了","不配合","不予配合","老员工","资深员工",
+      "拖拉","拖延","拖沓","催办","催不动","催了没","催了不理","@没回","群里@","没回复","不回复",
+      "周报","进度表","会议纪要","纪要整理","汇总进度",
+      "背锅","被批评","被批","批评","挨骂","协调不好","配合度差","推动力差","人缘问题"
+    ],
+    emergency: { title:"立即处理（24小时内，停止一个人扛）", owner:"被卡住的协调人 + 其直属主管",
+      steps:["停止'人对人催'的循环：不再私下聊、不再群里@，因为对方已经用'不回'表明了态度","把'催不动'上升为主管的问题：书面汇报——'XX 两位同事的进度表截至X时未提交，我已完成 3 次提醒但未收到反馈，需要您出面明确优先级'","附上事实清单：列出每次提醒的时间、方式、对方的回复（或未回复），只讲事实","请主管做两件事：① 主管在例会上正式宣布'进度表提交是硬性要求'；② 明确未提交的后果由提交人承担","保护自己：向主管明确——'我的职责是汇总，不是替别人交作业。如果需要持续施压，请给我授权或改由有权限的人推动'","保留所有沟通截图"] },
+    rootCause: { title:"根因分析（3天内，这不是'人缘问题'，是'机制问题'）", owner:"HRBP + 部门主管 + 被卡住的协调人", tool:"角色-权限-机制三角分析 + 5Why",
+      steps:["查角色错位：当事人的岗位是'助理'，但实际在做'项目协调'的工作","查授权缺失：公司有没有正式授权当事人推动这件事？是嘴上说的还是有书面职责说明？","查 SLA 缺失：流程里有没有明确'每周几前必须提交'？有没有写'逾期不交会怎样'？","查升级路径：老员工不交，当事人能升级到哪里？有没有'逾期 24 小时自动抄送主管'的机制？","查主管责任：领导批评当事人'协调不好'，但真正的问题是谁？","查历史规律：老员工对其他同事也拖拉吗？还是只针对当事人？","查考核导向：公司有没有把'提交进度表'这件事纳入考核？"] },
+    prevention: { title:"系统预防（2周内落地，让推动从'靠人'变'靠机制'）", owner:"部门主管 + HRBP + IT", metric:"周报按时提交率大于 95%，协调人背锅投诉 = 0",
+      steps:["【授权要么给、要么改】如果公司希望助理做协调：正式授予'项目协调人'角色并授权升级；如果不想授权：把职责划给项目经理或主管本人","【建立提交 SLA】例会结束后 24 小时内必须提交进度表","【升级机制自动化】用工具设自动提醒——2小时提醒1次，24小时未交自动抄送主管","【主管公开背书】主管在例会上正式宣布'进度表是每个人自己的责任'","【改变考核导向】把'提交及时率'纳入个人 KPI","【变更推动方式】从'人对人催'变成'系统对人催'","【角色复盘】协调人 + 主管 + HRBP 复盘一次：哪些推动靠人情？哪些能靠机制？","【岗位说明书更新】岗位说明书里要写清楚推动的边界、权限、升级路径"] }
+  },
+
+  wrong_delivery: {
+    name: "货不对板 / 发错货", icon: "📦",
+    layer: "执行层", weight: 6,
+    keywords: ["货不对板","发错","错发","型号不对","规格不符","发错了","拣错","贴错标"],
+    emergency: { title:"立即处理（24小时内）", owner:"客服主管牵头，仓储配合", steps:["客户拍照留证 → 暂停签收 → 货物封存待查","客服 1 小时内响应","调取发货记录 + 出库照片 + 装箱清单","补发正确货品或全额退款","给客户补偿"] },
+    rootCause: { title:"根因分析（3天内）", owner:"仓储主管 + 质量", tool:"5Why + 差错归因表", steps:["查拣货记录：是拣错货还是贴错标？","查出库复核记录：复核为什么没拦住？","查 SKU 编码：是否存在相似 SKU 容易混淆？","查人员：新员工是否经过培训考核？","查流程：出库环节有没有强制二次扫码复核？"] },
+    prevention: { title:"系统预防（1周内落地）", owner:"仓储经理", metric:"发货差错率小于 0.3%", steps:["出库强制二次扫码","相似 SKU 分区存放 + 颜色标签","发货前拍照留档","复核员签字确认","每周统计发货差错率"] }
+  },
+
+  slow_approval: {
+    name: "审批慢 / 卡在领导", icon: "✍️",
+    layer: "执行层", weight: 7,
+    keywords: ["审批慢","审批","签字","盖章","层层","走流程","批不下来","等领导","会签"],
+    emergency: { title:"立即处理（当天）", owner:"流程发起人", steps:["设置超时提醒：2 小时未批自动催办","开启代理人机制","紧急事项走绿色通道"] },
+    rootCause: { title:"根因分析（1周内）", owner:"运营 / 财务", tool:"审批日志分析 + 权限盘点", steps:["统计近 3 个月审批耗时","盘点审批权限","访谈一线"] },
+    prevention: { title:"系统预防（2周内落地）", owner:"总经理 + 财务", metric:"平均审批时长下降 50%", steps:["建立金额分级授权矩阵","同质审批合并为并联审批","非必要节点直接取消","移动审批"] }
+  },
+
+  inventory_mismatch: {
+    name: "库存对不上 / 账实不符", icon: "📊",
+    layer: "执行层", weight: 8,
+    keywords: ["库存对不上","库存","积压","呆滞","缺货","周转","压货","账实不符"],
+    emergency: { title:"立即处理（3天内）", owner:"仓储主管", steps:["锁定差异 SKU","紧急盘点","调整系统数据","通知销售"] },
+    rootCause: { title:"根因分析（1周内）", owner:"仓储 + 财务", tool:"出入库流水追溯", steps:["查最近 1 个月出入库记录","找差异来源","检查是否有手工改数"] },
+    prevention: { title:"系统预防（2周内落地）", owner:"仓储经理 + IT", metric:"库存准确率大于 99.5%", steps:["出入库强制扫码","系统修改留痕","日清日结","ABC 分类循环盘点","安全库存自动补货"] }
+  }
+};
+
+var STEP_TO_PROBLEM = [
+  { kw:["物料主数据","物料编码","选编码","主数据","编码状态"], problem:"material_master_data" },
+  { kw:["报价","成本核算","核价"], problem:"quotation_cost_control" },
+  { kw:["价格调整","加价沟通","谈判"], problem:"customer_price_hike" },
+  { kw:["投诉","客户沟通","安抚"], problem:"customer_price_hike" },
+  { kw:["项目负责人","降本增效","统筹"], problem:"cross_level_backfire" },
+  { kw:["进度分发","进度表","会议纪要","纪要整理","汇总进度","周报"], problem:"unauthorized_coordination" },
+  { kw:["签收","异常"], problem:"wrong_delivery" },
+  { kw:["拣货","复核","出库","打包"], problem:"wrong_delivery" },
+  { kw:["盘点","对账","库存"], problem:"inventory_mismatch" },
+  { kw:["审批","评审","会签","审核"], problem:"slow_approval" }
+];
+
+var PAIN_WORDS = ["审批","签字","核对","手工","录入","检验","评审","对账","盘点","比价","汇总","确认","审核","等待","提报","申请","签收","异常","主数据","选编码","报价","加价","投诉","谈判","治理","状态","进度","纪要","统筹","降本"];
+
+/* =========================================================
+ * 状态 & 工具
+ * =======================================================*/
+var state = { rawText:"", analysis:null, asis:[], tobe:[], tobeDomain:"" };
+
+function $(id){ return document.getElementById(id); }
+function escapeXml(s){
+  return String(s == null ? "" : s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&apos;");
+}
+function escHtml(s){ return escapeXml(s); }
+function escAttr(s){ return escapeXml(s); }
+
+function detectDomain(text){
+  text = text || "";
+  var domain = "战略与经营管理", best = 0;
+  for (var d in DOMAIN_KW){
+    if (!DOMAIN_KW.hasOwnProperty(d)) continue;
+    var kws = DOMAIN_KW[d], c = 0;
+    for (var i=0;i<kws.length;i++){ if (text.indexOf(kws[i]) > -1) c++; }
+    if (c > best){ best = c; domain = d; }
+  }
+  return domain;
+}
+
+function wrapText(text, maxChars){
+  text = String(text || "");
+  if (!text) return [""];
+  var lines = [], cur = "";
+  for (var i = 0; i < text.length; i++){
+    cur += text[i];
+    if (cur.length >= maxChars){ lines.push(cur); cur = ""; }
+  }
+  if (cur) lines.push(cur);
+  if (lines.length > 2) lines = [lines[0], lines.slice(1).join("").slice(0, maxChars-1) + "…"];
+  return lines;
+}
+
+function checkInputGaps(text){
+  var gaps = [];
+  var t = (text || "").replace(/\s+/g, "");
+  if (t.length < 15){
+    gaps.push({ key: "长度", msg: "描述太短（当前 " + t.length + " 字）。请至少写 2-3 句话，说清：谁在做什么、卡在哪里、多久一次。" });
+    return gaps;
+  }
+  var dims = [
+    { key: "谁（角色）", msg: "缺少「谁」：请说明是哪个角色 / 部门在操作，例如：销售、客服、仓储、财务、采购、生产、计划。",
+      kws: ["销售","客服","财务","采购","仓储","仓库","生产","计划","业务员","经理","主管","员工","团队","部门","运营","人事","HR","技术","研发","工程","质量","品管","仓管","文员","跟单","商务","行政","法务","老板","领导","助理","老员工","副总","董事长","总经理","副总裁"] },
+    { key: "做什么（环节）", msg: "缺少「做什么」：请说明具体是哪件事，例如：报价、审批、发货、入库、盘点、对账、开票、回款、客诉处理。",
+      kws: ["订单","报价","审批","发货","入库","出库","盘点","对账","开票","回款","客诉","投诉","交付","生产","采购","签收","录入","登记","汇总","沟通","跟进","排产","检验","报表","合同","下单","退货","换货","收款","付款","报销","结算","派单","受理","巡检","维护","装配","质检","打包","拣货","复核","调度","周报","进度表","会议纪要","纪要","整理","统筹","主导","协调"] },
+    { key: "卡在哪（问题）", msg: "缺少「卡在哪」：请说明当前遇到了什么问题，例如：太慢、经常错、对不上、没人管、客户投诉、反复返工。",
+      kws: ["慢","拖","错","乱","对不上","没人管","扯皮","推诿","投诉","不满","延期","超时","返工","积压","缺货","批不下来","卡住","等","催","来不及","做不完","重复","漏","忘","丢失","出问题","混乱","不一致","不清楚","来回","反复","难","麻烦","低效","浪费","疏忽","纠纷","不配合","拖拉","拖延","没回","不回","批评","越级","告状","死循环","恶性循环"] },
+    { key: "多久一次/多久完成（频率）", msg: "缺少「频率 / 耗时」：请补充大概多久发生一次、每次要多久，例如：每天 20 次、每次 3 天、一个月 5 起。",
+      kws: ["每天","每周","每月","每次","一天","一周","一个月","小时","分钟","天","次","经常","总是","反复","很多","好几","频繁","天天","经常性","偶尔","隔三差五","每单","平均","大概","大约","左右","例会","周例会"] },
+    { key: "用什么工具（系统）", msg: "缺少「用什么工具」：请说明是通过系统、Excel、纸质、微信群、电话还是邮件操作的。",
+      kws: ["系统","软件","excel","Excel","ERP","OA","钉钉","企业微信","纸质","群里","微信群","电话","邮件","表格","手工","微信","飞书","SAP","金蝶","用友","U8","K3","账本","台账"] },
+    { key: "带来什么后果（影响）", msg: "缺少「后果 / 影响」：请说明问题造成了什么影响，例如：客户投诉、订单流失、成本上升、返工、罚款。",
+      kws: ["客户","损失","成本","投诉","退款","罚款","耽误","影响","赔","流失","利润","收入","订单丢","差评","口碑","返工","加急","误期","赔偿","扣款","停工","停线","报废","重做","加班","批评","挨批","被批","背锅","扣分"] }
+  ];
+  for (var i=0;i<dims.length;i++){
+    var d = dims[i];
+    var has = false;
+    for (var j=0;j<d.kws.length;j++){
+      if (t.indexOf(d.kws[j]) > -1){ has = true; break; }
+    }
+    if (!has) gaps.push({ key: d.key, msg: d.msg });
+  }
+  if (gaps.length === 0){
+    gaps.push({ key: "问题类型", msg: "现有描述已包含基本要素，但系统暂未匹配到具体的问题类型。请尝试更明确地说明：问题发生在哪个环节（如审批、报价、发货、盘点）？造成了什么损失？" });
+  }
+  return gaps;
+}
+
+function analyzeLocal(text){
+  text = text || "";
+  var issues = [];
+  for (var key in DEEP_FIX_LIB){
+    if (!DEEP_FIX_LIB.hasOwnProperty(key)) continue;
+    var f = DEEP_FIX_LIB[key], hit = [];
+    for (var i=0;i<f.keywords.length;i++){
+      if (text.indexOf(f.keywords[i]) > -1) hit.push(f.keywords[i]);
+    }
+    if (hit.length){
+      issues.push({
+        problemId: key, title: f.name, layer: f.layer,
+        weight: f.weight || 99,
+        evidence: "原文线索：" + hit.join("、"),
+        impact: f.prevention.metric ? "影响：" + f.prevention.metric : "影响流程效率与客户满意度",
+        fix: f.prevention.title + "：" + f.prevention.steps[0],
+        metric: f.prevention.metric || "关键指标",
+        ecrs: "深度改进"
+      });
+    }
+  }
+  if (!issues.length){
+    var gaps = checkInputGaps(text);
+    issues.push({
+      problemId: null, title: "现状描述信息不足，暂时无法定位关键问题",
+      layer: "诊断前置", weight: 99,
+      evidence: "", impact: "", fix: "", metric: "", ecrs: "",
+      priority: "高", isIncomplete: true, gaps: gaps
+    });
+  }
+  issues.sort(function(a,b){ return (a.weight||99) - (b.weight||99); });
+  for (var k=0;k<issues.length;k++){
+    if (!issues[k].priority) issues[k].priority = k < 2 ? "高" : (k < 5 ? "中" : "低");
+  }
+  var domain = detectDomain(text);
+  var maturity = issues[0] && issues[0].isIncomplete ? 0 : Math.max(1, 5 - Math.min(4, Math.ceil(issues.length/2)));
+  var questions = [
+    "这个问题涉及哪个角色 / 部门？他们具体在做什么？",
+    "这个问题多久发生一次？每次从开始到结束要多久？",
+    "目前是用什么工具处理的（系统 / Excel / 纸质 / 微信）？",
+    "出问题后，目前是怎么处理的？谁负责跟进？",
+    "这个问题造成的最大损失是什么（客户投诉 / 返工 / 罚款 / 加班）？"
+  ];
+  var flat = text.replace(/\s+/g, "");
+  var head = flat.slice(0, 46);
+  var summary;
+  if (issues[0] && issues[0].isIncomplete){
+    summary = "现状描述：" + (head ? head : "（空）") + "。当前描述信息不足，系统暂时无法定位关键问题，请根据下方提示补充后再试。";
+  } else {
+    summary = "现状概述：" + head + (flat.length > 46 ? "……" : "") +
+      "。共识别出 " + issues.length + " 个关键问题，其中核心矛盾是「" +
+      (issues[0] ? issues[0].title : "") + "」，根因是「" +
+      (issues[1] ? issues[1].title : issues[0] ? issues[0].title : "") + "」。";
+  }
+  return { summary: summary, domain: domain, maturity: maturity, issues: issues, questions: questions, source: "本地规则引擎", isIncomplete: !!(issues[0] && issues[0].isIncomplete) };
+}
+
+function getCfg(){
+  try { return JSON.parse(localStorage.getItem("biz_flow_cfg") || "{}"); } catch(e){ return {}; }
+}
+function buildPrompt(text){
+  return "你是资深流程管理顾问 + 组织政治顾问。基于用户对业务现状的随意描述，输出结构化诊断。\n\n" +
+  "【要求】\n1. 严格输出 JSON，不要任何解释文字。\n" +
+  "2. domain 从下面列表选一个：\n" + Object.keys(FLOW_LIB).join("、") + "\n" +
+  "3. 必须分层识别问题：核心矛盾层 > 根因层 > 传导层 > 组织层 > 执行层。\n" +
+  "4. 现状分析只做诊断，不给对策。\n" +
+  "5. 特别注意识别两类容易混淆的问题：\n" +
+  "   - 「无授权协调」：同级或略高一级的同事拖拉，协调人没有正式授权，但没有越级汇报反噬\n" +
+  "   - 「越级推动反噬」：协调人向高层汇报后，被推动的高管认为是告状，导致恶性循环。识别关键词：副总、董事长、越级、告状、试用期、降本增效\n" +
+  "   两者需要区分，不要混为一谈。\n" +
+  "6. 如果用户描述信息不足，issues 可以返回空数组，但必须加 gaps（数组）。\n\n" +
+  "【JSON 结构】\n{\n" +
+  '  "summary": "现状概括",\n  "domain": "流程域",\n  "maturity": 1到5,\n' +
+  '  "issues": [{"title":"","evidence":"","impact":"","ecrs":"","metric":"","priority":"高|中|低"}],\n' +
+  '  "questions": ["",""],\n  "gaps": ["需要补充的维度"]\n}\n\n【用户描述】\n' + text;
+}
+function analyzeLLM(text){
+  var cfg = getCfg();
+  var base = (cfg.base || "https://api.openai.com/v1").replace(/\/+$/, "");
+  var ctrl = new AbortController();
+  var timer = setTimeout(function(){ ctrl.abort(); }, 25000);
+  return fetch(base + "/chat/completions", {
+    method:"POST", signal:ctrl.signal,
+    headers:{ "Content-Type":"application/json", "Authorization":"Bearer " + (cfg.key||"") },
+    body: JSON.stringify({ model: cfg.model || "gpt-4o-mini", temperature:0.2, messages:[{role:"user", content: buildPrompt(text)}] })
+  }).then(function(res){
+    clearTimeout(timer);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return res.json();
+  }).then(function(data){
+    var c = ""; try { c = data.choices[0].message.content || ""; } catch(e){ c = ""; }
+    c = c.trim();
+    if (c.indexOf("```") === 0) c = c.replace(/```json/g,"").replace(/```/g,"").trim();
+    var obj = JSON.parse(c);
+    if (!FLOW_LIB[obj.domain]) obj.domain = detectDomain(text);
+    obj.maturity = Math.min(5, Math.max(1, parseInt(obj.maturity,10) || 3));
+    obj.source = "LLM（" + (cfg.model||"gpt-4o-mini") + "）";
+    if (!obj.issues || !obj.issues.length){
+      var gaps = obj.gaps && obj.gaps.length ? obj.gaps : checkInputGaps(text).map(function(g){ return g.msg; });
+      obj.issues = [{ problemId: null, title: "现状描述信息不足，暂时无法定位关键问题", layer: "诊断前置", weight: 99, evidence: "", impact: "", fix: "", metric: "", ecrs: "", priority: "高", isIncomplete: true, gaps: gaps.map(function(g){ return { key: "补充项", msg: g }; }) }];
+      obj.isIncomplete = true;
+    } else {
+      obj.issues.forEach(function(it){
+        var title = it.title || "";
+        for (var key in DEEP_FIX_LIB){
+          if (!DEEP_FIX_LIB.hasOwnProperty(key)) continue;
+          var f = DEEP_FIX_LIB[key];
+          for (var i=0;i<f.keywords.length;i++){
+            if (title.indexOf(f.keywords[i]) > -1){ it.problemId = key; return; }
+          }
+        }
+      });
+    }
+    return obj;
+  }).catch(function(err){ clearTimeout(timer); throw err; });
+}
+
+function renderAnalysis(a){
+  var out = $("analysisOut");
+  if (!out) return;
+  var cls = { "高":"", "中":"p2", "低":"p3" };
+  var bcls = { "高":"hi", "中":"mid", "低":"lo" };
+  var pname = { "高":"高", "中":"中", "低":"低" };
+  var html = '<div class="ok">分析完成 · 来源：' + escHtml(a.source) + ' · 识别流程域：<b>' + escHtml(a.domain) + '</b></div>';
+  html += '<div class="card" style="border-left-color:#2563eb">' + escHtml(a.summary) + '</div>';
+  if (!a.isIncomplete){
+    html += '<div class="maturity"><b style="font-size:12.5px;flex:none">流程成熟度</b><div class="bar"><i style="width:' + (a.maturity*20) + '%"></i></div><span style="font-size:12.5px;flex:none">' + a.maturity + ' / 5</span></div>';
+  }
+  if (!a.isIncomplete && a.issues.length > 1){
+    html += '<div class="chain"><b>🔗 问题传导链</b>（先看清怎么一步步恶化的）：<br>';
+    a.issues.forEach(function(it, i){
+      var cls2 = i === 0 ? "core" : (i === 1 ? "root" : "result");
+      html += '<span class="step ' + cls2 + '">' + escHtml(it.title) + '</span>';
+      if (i < a.issues.length - 1) html += '<span class="arrow">→</span>';
+    });
+    html += '<div style="margin-top:8px;font-size:12px;color:#6b7280">红色 = 核心矛盾（最紧急），黄色 = 根因，灰色 = 传导与结果</div>';
+    html += '</div>';
+  }
+  if (a.isIncomplete){
+    var inc = a.issues[0];
+    html += '<h3 style="font-size:14px;margin:16px 0 4px">⚠️ 信息补充提示</h3>';
+    html += '<div class="incomplete-card">';
+    html += '<h4>⚠️ 现状描述信息不足，暂时无法分析出关键问题</h4>';
+    html += '<p class="lead">系统已读取到你的描述，但缺少分析所需的关键信息。请按下面清单，逐条补充后再次点击「分析现状」：</p>';
+    if (inc.gaps && inc.gaps.length){
+      html += '<ul class="gap-list">';
+      inc.gaps.forEach(function(g, i){
+        html += '<li><span class="num">' + (i+1) + '</span><span>' + escHtml(g.msg) + '</span></li>';
+      });
+      html += '</ul>';
+    }
+    html += '<div class="tip">';
+    html += '<b>✅ 参考示例：</b><br>';
+    html += '<em>「销售每天收到 20 多张订单，每张都要等销售经理、财务、总经理三个人签字，平均要 3 天才批完。客户经常打电话来催，上个月还因为审批太慢丢了一单。目前是通过钉钉审批，没有超时提醒。」</em>';
+    html += '<br><br>';
+    html += '<b>✅ 这段话包含了：</b>谁（销售、销售经理、财务、总经理）｜ 做什么（订单审批）｜ 卡在哪（审批慢、丢单）｜ 频率（每天 20 多张、3 天）｜ 工具（钉钉）｜ 后果（客户催、丢单）。';
+    html += '</div></div>';
+  } else {
+    html += '<h3 style="font-size:14px;margin:16px 0 4px">关键问题清单（按紧急度排序）</h3>';
+    html += '<p class="hint" style="margin:0 0 8px">本模块只做现状诊断。问题的对策、验证指标请到模块 3 查看。</p>';
+    a.issues.forEach(function(it){
+      var p = it.priority || "中";
+      html += '<div class="card ' + (cls[p]||"") + '">' +
+        '<div class="layer">📍 ' + escHtml(it.layer || "未分层") + '</div>' +
+        '<h4><span class="badge ' + (bcls[p]||"lo") + '">紧急度：' + escHtml(pname[p]||p) + '</span>' + escHtml(it.title) + '</h4>' +
+      '</div>';
+    });
+  }
+  if (a.questions && a.questions.length){
+    html += '<h3 style="font-size:14px;margin:16px 0 6px">建议向业务方确认的问题</h3><ul style="margin:0;padding-left:20px;font-size:13px;color:#374151">';
+    a.questions.forEach(function(q){ html += '<li>' + escHtml(q) + '</li>'; });
+    html += '</ul>';
+  }
+  out.innerHTML = html;
+}
+
+function renderFlowSVG(container, steps, mode){
+  if (!container) return;
+  var isTobe = (mode === 'tobe');
+  try {
+    if (!steps || !steps.length){ container.innerHTML = '<div class="placeholder">暂无步骤</div>'; return; }
+    var roles = [];
+    for (var i=0;i<steps.length;i++){
+      var r = (steps[i] && steps[i].role) ? steps[i].role : "未指定";
+      if (roles.indexOf(r) === -1) roles.push(r);
+    }
+    if (!roles.length) roles.push("未指定");
+    var laneHeaderH = 40, startZoneH = 62, endZoneH = 62;
+    var startNodeGap = 18, endNodeGap = 18, laneBottomGap = 22;
+    var laneW = isTobe ? 260 : 214, laneGap = 16;
+    var nodeW = isTobe ? 232 : 186, nodeH = isTobe ? 118 : 72;
+    var rowGap = isTobe ? 78 : 58, leftPad = 26, rightPad = 26;
+    var firstNodeY = laneHeaderH + startZoneH + startNodeGap;
+    var laneAreaH = laneHeaderH + startZoneH + startNodeGap + steps.length * nodeH + (steps.length - 1) * rowGap + endZoneH + endNodeGap + laneBottomGap;
+    var totalH = laneAreaH;
+    var totalW = leftPad + roles.length * laneW + (roles.length - 1) * laneGap + rightPad;
+    function laneX(ri){ return leftPad + ri * (laneW + laneGap); }
+    var nodes = [];
+    for (var k=0;k<steps.length;k++){
+      var s = steps[k] || {};
+      var role = s.role || "未指定";
+      var ri = roles.indexOf(role); if (ri < 0) ri = 0;
+      var x = laneX(ri) + (laneW - nodeW) / 2;
+      var y = firstNodeY + k * (nodeH + rowGap);
+      nodes.push({ role:role, act:s.act||"", pain:!!s.pain, deepFix: s.deepFix || null, x:x, y:y, w:nodeW, h:nodeH, cx:x + nodeW/2, ri:ri });
+    }
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + totalW + '" height="' + totalH + '" viewBox="0 0 ' + totalW + ' ' + totalH + '" style="font-family:-apple-system,PingFang SC,Microsoft YaHei,sans-serif;display:block">';
+    svg += '<defs>';
+    svg += '<marker id="arr-' + mode + '" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L0,8 L9,4 z" fill="#94a3b8"/></marker>';
+    svg += '<filter id="sh-' + mode + '" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#0f172a" flood-opacity="0.10"/></filter>';
+    svg += '</defs>';
+    for (var r2=0; r2<roles.length; r2++){
+      var lx = laneX(r2);
+      var fillLane = (r2 % 2 === 0) ? '#f8fafc' : '#f1f5f9';
+      svg += '<rect x="' + lx + '" y="0" width="' + laneW + '" height="' + laneAreaH + '" rx="12" fill="' + fillLane + '" stroke="#e2e8f0" stroke-width="1"/>';
+      svg += '<rect x="' + (lx + 12) + '" y="7" width="' + (laneW - 24) + '" height="28" rx="7" fill="#e0e7ff"/>';
+      svg += '<text x="' + (lx + laneW/2) + '" y="26" text-anchor="middle" font-size="13" font-weight="700" fill="#3730a3">' + escapeXml(roles[r2]) + '</text>';
+    }
+    for (var m=0; m<nodes.length-1; m++){
+      var a = nodes[m], b = nodes[m+1];
+      var x1 = a.cx, y1 = a.y + a.h, x2 = b.cx, y2 = b.y;
+      var d;
+      if (Math.abs(x1 - x2) < 1){ d = 'M' + x1 + ' ' + y1 + ' L' + x2 + ' ' + y2; }
+      else { var midY = (y1 + y2) / 2; d = 'M' + x1 + ' ' + y1 + ' L' + x1 + ' ' + midY + ' L' + x2 + ' ' + midY + ' L' + x2 + ' ' + y2; }
+      svg += '<path d="' + d + '" fill="none" stroke="#94a3b8" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#arr-' + mode + ')"/>';
+    }
+    var first = nodes[0];
+    var startCy = laneHeaderH + startZoneH / 2;
+    svg += '<path d="M' + first.cx + ' ' + (startCy + 16) + ' L' + first.cx + ' ' + (first.y - 1) + '" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arr-' + mode + ')"/>';
+    svg += '<rect x="' + (first.cx - 44) + '" y="' + (startCy - 16) + '" width="88" height="32" rx="16" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>';
+    svg += '<text x="' + first.cx + '" y="' + (startCy + 5) + '" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">开始</text>';
+    for (var n=0; n<nodes.length; n++){
+      var nd = nodes[n];
+      var isPain = (!isTobe) && nd.pain;
+      var hasFix = isTobe && nd.deepFix;
+      var fillNode, strokeNode, strokeW;
+      if (isPain){ fillNode='#fef2f2'; strokeNode='#dc2626'; strokeW=2; }
+      else if (hasFix){ fillNode='#fff7ed'; strokeNode='#f97316'; strokeW=2.5; }
+      else { fillNode='#ffffff'; strokeNode='#cbd5e1'; strokeW=1.5; }
+      svg += '<rect x="' + nd.x + '" y="' + nd.y + '" width="' + nd.w + '" height="' + nd.h + '" rx="10" fill="' + fillNode + '" stroke="' + strokeNode + '" stroke-width="' + strokeW + '" filter="url(#sh-' + mode + ')"/>';
+      svg += '<circle cx="' + (nd.x + 18) + '" cy="' + (nd.y + 18) + '" r="10" fill="' + (isPain ? '#dc2626' : (hasFix ? '#f97316' : '#64748b')) + '"/>';
+      svg += '<text x="' + (nd.x + 18) + '" y="' + (nd.y + 22) + '" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">' + (n+1) + '</text>';
+      var titleY = nd.y + 22;
+      var lines = wrapText(nd.act, isTobe ? 11 : 9);
+      for (var li=0; li<lines.length; li++){
+        svg += '<text x="' + (nd.x + nd.w/2) + '" y="' + (titleY + 16 + li*16) + '" text-anchor="middle" font-size="12.5" font-weight="600" fill="' + (isPain ? '#991b1b' : '#1e293b') + '">' + escapeXml(lines[li]) + '</text>';
+      }
+      if (isPain){ svg += '<text x="' + (nd.x + nd.w - 10) + '" y="' + (nd.y + 20) + '" text-anchor="end" font-size="11" font-weight="700" fill="#dc2626">⚠ 瓶颈</text>'; }
+      if (hasFix){
+        var f = nd.deepFix;
+        var badgeY = nd.y + 60;
+        svg += '<rect x="' + (nd.x + 8) + '" y="' + badgeY + '" width="' + (nd.w - 16) + '" height="20" rx="5" fill="#fed7aa"/>';
+        svg += '<text x="' + (nd.x + nd.w/2) + '" y="' + (badgeY + 14) + '" text-anchor="middle" font-size="11.5" font-weight="700" fill="#9a3412">' + escapeXml(f.icon + " " + f.name) + '</text>';
+        var tagY = badgeY + 26;
+        var tags = [{label:"应急", color:"#dc2626", bg:"#fee2e2"},{label:"根因", color:"#d97706", bg:"#fef3c7"},{label:"预防", color:"#16a34a", bg:"#dcfce7"}];
+        var tagW = (nd.w - 20) / 3;
+        for (var ti=0; ti<3; ti++){
+          var tx = nd.x + 8 + ti * (tagW + 2);
+          svg += '<rect x="' + tx + '" y="' + tagY + '" width="' + tagW + '" height="20" rx="5" fill="' + tags[ti].bg + '"/>';
+          svg += '<text x="' + (tx + tagW/2) + '" y="' + (tagY + 14) + '" text-anchor="middle" font-size="11" font-weight="700" fill="' + tags[ti].color + '">' + tags[ti].label + '</text>';
+        }
+      }
+    }
+    var last = nodes[nodes.length - 1];
+    var endCy = last.y + last.h + endNodeGap + endZoneH / 2;
+    svg += '<path d="M' + last.cx + ' ' + (last.y + last.h) + ' L' + last.cx + ' ' + (endCy - 17) + '" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#arr-' + mode + ')"/>';
+    svg += '<rect x="' + (last.cx - 44) + '" y="' + (endCy - 16) + '" width="88" height="32" rx="16" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>';
+    svg += '<text x="' + last.cx + '" y="' + (endCy + 5) + '" text-anchor="middle" font-size="13" font-weight="700" fill="#15803d">结束</text>';
+    svg += '</svg>';
+    container.innerHTML = svg;
+  } catch(err){
+    container.innerHTML = '<div class="err">流程图渲染出错：' + escHtml(err && err.message ? err.message : String(err)) + '</div>';
+  }
+}
+
+function renderAsIsTable(){
+  var body = $("asIsBody");
+  if (!body) return;
+  if (!state.asis.length){ body.innerHTML = '<tr><td colspan="5" style="color:#9ca3af;text-align:center;padding:14px">暂无步骤</td></tr>'; return; }
+  var html = "";
+  for (var i=0;i<state.asis.length;i++){
+    var s = state.asis[i];
+    html += '<tr><td class="c">' + (i+1) + '</td>' +
+      '<td><input data-i="' + i + '" data-k="role" value="' + escAttr(s.role) + '"></td>' +
+      '<td><input data-i="' + i + '" data-k="act" value="' + escAttr(s.act) + '"></td>' +
+      '<td class="c"><input type="checkbox" data-i="' + i + '" ' + (s.pain?'checked':'') + '></td>' +
+      '<td class="c"><button class="mini" data-del="' + i + '">删除</button></td></tr>';
+  }
+  body.innerHTML = html;
+}
+
+function guessAsIs(){
+  var txtEl = $("rawText");
+  var text = state.rawText || (txtEl ? txtEl.value : "") || "";
+  var domEl = $("asIsDomain");
+  var domain = domEl ? domEl.value : "";
+  if (!domain) domain = state.analysis ? state.analysis.domain : detectDomain(text);
+  var std = FLOW_LIB[domain];
+  if (!std){ domain = "战略与经营管理"; std = FLOW_LIB[domain]; }
+  state.asis = std.map(function(s){
+    var pain = false;
+    for (var i=0;i<PAIN_WORDS.length;i++){
+      if (s[1].indexOf(PAIN_WORDS[i]) > -1){ pain = true; break; }
+    }
+    return { role: s[0], act: s[1], pain: pain };
+  });
+  renderAsIsTable();
+  drawAsIs();
+}
+
+function drawAsIs(){
+  try {
+    var el = $("asIsChart");
+    if (!el) return;
+    if (!state.asis.length) guessAsIs();
+    renderFlowSVG(el, state.asis, 'asis');
+  } catch(err){
+    var el2 = $("asIsChart");
+    if (el2) el2.innerHTML = '<div class="err">生成出错：' + escHtml(err && err.message ? err.message : String(err)) + '</div>';
+  }
+}
+
+function matchProblem(act){
+  for (var i=0;i<STEP_TO_PROBLEM.length;i++){
+    var m = STEP_TO_PROBLEM[i];
+    for (var j=0;j<m.kw.length;j++){
+      if (act.indexOf(m.kw[j]) > -1) return m.problem;
+    }
+  }
+  return null;
+}
+
+function buildToBe(domain){
+  var std = FLOW_LIB[domain] || FLOW_LIB["战略与经营管理"];
+  var result = [];
+  for (var i=0;i<std.length;i++){
+    var s = std[i];
+    var pid = matchProblem(s[1]);
+    result.push({ role: s[0], act: s[1], problemId: pid, deepFix: pid ? DEEP_FIX_LIB[pid] : null });
+  }
+  return result;
+}
+
+function renderDeepFixCard(problemId, stepName, role, srcTag){
+  var f = DEEP_FIX_LIB[problemId];
+  if (!f) return "";
+  var html = '<div class="deep-card">';
+  html += '<div class="deep-head"><span class="icon">' + f.icon + '</span>「' + escHtml(stepName) + '」— ' + escHtml(f.name) +
+          '<span class="layer-tag">' + escHtml(f.layer || "") + '</span>' +
+          (srcTag ? '<span class="src-tag">' + escHtml(srcTag) + '</span>' : '') +
+          '<span style="margin-left:auto;font-size:12px;font-weight:400;opacity:.9">责任角色：' + escHtml(role) + '</span></div>';
+  html += '<div class="deep-body">';
+  html += '<div class="deep-col" style="background:#fef2f2"><h5><span class="tag fire">🔥 应急</span>' + escHtml(f.emergency.title) + '</h5>';
+  html += '<div class="owner">👤 ' + escHtml(f.emergency.owner) + '</div><ol>';
+  f.emergency.steps.forEach(function(s){ html += '<li>' + escHtml(s) + '</li>'; });
+  html += '</ol>';
+  if (f.emergency.warn){ html += '<div class="warn">⛔ ' + escHtml(f.emergency.warn) + '</div>'; }
+  html += '</div>';
+  html += '<div class="deep-col" style="background:#fffbeb"><h5><span class="tag search">🔍 根因</span>' + escHtml(f.rootCause.title) + '</h5>';
+  html += '<div class="owner">👤 ' + escHtml(f.rootCause.owner) + ' ｜ 🔧 ' + escHtml(f.rootCause.tool) + '</div><ol>';
+  f.rootCause.steps.forEach(function(s){ html += '<li>' + escHtml(s) + '</li>'; });
+  html += '</ol></div>';
+  html += '<div class="deep-col" style="background:#f0fdf4"><h5><span class="tag shield">🛡 预防</span>' + escHtml(f.prevention.title) + '</h5>';
+  html += '<div class="owner">👤 ' + escHtml(f.prevention.owner) + '</div><ol>';
+  f.prevention.steps.forEach(function(s){ html += '<li>' + escHtml(s) + '</li>'; });
+  html += '</ol>';
+  if (f.prevention.metric){ html += '<div class="metric">📊 目标：' + escHtml(f.prevention.metric) + '</div>'; }
+  html += '</div></div></div>';
+  return html;
+}
+
+function buildPilotPlan(analysis, domain, tobe){
+  var recStep = null, recFix = null;
+  for (var i=0;i<tobe.length;i++){
+    if (tobe[i].problemId){ recStep = tobe[i]; recFix = DEEP_FIX_LIB[tobe[i].problemId]; break; }
+  }
+  if (!recFix && analysis && analysis.issues){
+    for (var j=0;j<analysis.issues.length;j++){
+      if (analysis.issues[j].problemId){
+        recFix = DEEP_FIX_LIB[analysis.issues[j].problemId];
+        recStep = { role:"分析识别", act: analysis.issues[j].title };
+        break;
+      }
+    }
+  }
+  if (!recStep){ recStep = tobe[0] || {role:"", act:"待选环节"}; }
+  var problemName = recFix ? recFix.name : "所选环节";
+  var metric = recFix ? (recFix.prevention.metric || "环节耗时") : "环节耗时";
+  var emergencyFirst = recFix ? recFix.emergency.steps[0] : "先止血，避免问题扩大";
+  var preventionFirst = recFix ? recFix.prevention.steps[0] : "建立标准操作流程";
+  var layerName = recFix ? recFix.layer : "所选环节";
+
+  var html = '<div class="pilot">';
+  html += '<h4>🧪 4 周试点执行手册 —— 选 1 个问题，跑通闭环，再推广</h4>';
+  html += '<p class="hint" style="margin:4px 0 12px">核心原则：<b>先止血（应急），再找因（根因），最后防火（预防）</b>。</p>';
+  if (recFix){
+    html += '<div class="pilot-step" style="background:#fef2f2;border-radius:8px;padding:12px;border-bottom:none">';
+    html += '<div class="pilot-day" style="background:#fee2e2;color:#b91c1c">立即做</div><div class="pilot-body">';
+    html += '<h5>⓪ 先止血 —— 应急动作，一次做完，不能挑着做（不试点）</h5>';
+    html += '<p><b>为什么不能挑：</b>这 ' + recFix.emergency.steps.length + ' 条动作是环环相扣的。</p><ol style="margin:6px 0 0;padding-left:20px;font-size:13px;color:#7f1d1d">';
+    recFix.emergency.steps.forEach(function(s){ html += '<li>' + escHtml(s) + '</li>'; });
+    html += '</ol>';
+    if (recFix.emergency.warn){ html += '<p style="margin-top:8px;background:#fee2e2;border:1px dashed #fca5a5;border-radius:6px;padding:8px;color:#991b1b;font-weight:700">⛔ ' + escHtml(recFix.emergency.warn) + '</p>'; }
+    html += '</div></div>';
+  }
+  html += '<div class="pilot-step"><div class="pilot-day">第 1 天</div><div class="pilot-body">';
+  html += '<h5>① 锁定 1 个要试点的预防动作</h5>';
+  html += '<p><b>建议选这个：</b>「<b>' + escHtml(preventionFirst) + '</b>」</p>';
+  html += '<p><b>本次涉及问题：</b><b style="color:#c2410c">' + escHtml(problemName) + '</b>（' + escHtml(layerName) + '）</p>';
+  html += '<p><b>产出：</b>写下你选的预防动作 → <input class="pilot-input" placeholder="例：项目治理结构重设"></p>';
+  html += '</div></div>';
+  html += '<div class="pilot-step"><div class="pilot-day">第 2-3 天</div><div class="pilot-body">';
+  html += '<h5>② 测出「基线」—— 现状到底多糟</h5>';
+  html += '<p style="background:#fef3c7;padding:8px 12px;border-radius:6px"><b>核心指标：</b>' + escHtml(metric) + '</p>';
+  html += '<p><b>填表：</b>用<b>表 A「基线记录表」</b>填 10 行，算出平均值。</p>';
+  html += '</div></div>';
+  html += '<div class="pilot-step"><div class="pilot-day">第 4 天</div><div class="pilot-body">';
+  html += '<h5>③ 落地这个预防动作</h5>';
+  html += '<p><b>做什么：</b>把「' + escHtml(preventionFirst) + '」变成一页纸的操作说明。</p>';
+  html += '<p><b>要谁批准：</b>该环节直接主管口头同意即可。</p>';
+  html += '<p><b>紧急预案：</b>' + escHtml(emergencyFirst) + '</p>';
+  html += '</div></div>';
+  html += '<div class="pilot-step"><div class="pilot-day">第 5-18 天</div><div class="pilot-body">';
+  html += '<h5>④ 试运行两周（只记录，不折腾）</h5>';
+  html += '<p><b>记录：</b>用<b>表 B「试点记录表」</b>再填 10 行。</p>';
+  html += '</div></div>';
+  html += '<div class="pilot-step"><div class="pilot-day">第 19 天</div><div class="pilot-body">';
+  html += '<h5>⑤ 对比数据，做判定</h5>';
+  html += '<p><b>改善率 = (基线值 − 试点值) ÷ 基线值 × 100%。</b></p>';
+  html += '<ul><li>改善率 <b>≥ 20%</b> → 通过；</li><li><b>10%~20%</b> → 换第 2 条再跑；</li><li><b>小于 10%</b> → 换问题。</li></ul>';
+  html += '<p><b>填写：</b>基线值 <input class="pilot-input" style="width:80px"> ｜ 试点值 <input class="pilot-input" style="width:80px"> ｜ 改善率 <input class="pilot-input" style="width:80px"></p>';
+  html += '</div></div>';
+  html += '<div class="pilot-step"><div class="pilot-day">第 20-21 天</div><div class="pilot-body">';
+  html += '<h5>⑥ 固化 or 退回（闭环）</h5>';
+  html += '<p><b>若达标：</b>写进 SOP，培训执行人，推广到其他小组，1 个月后复测。</p>';
+  html += '<p><b>若未达标：</b>换预防动作，或换问题。</p>';
+  html += '</div></div>';
+  html += '<h4 style="margin:18px 0 6px;color:#92400e">📋 表 A · 基线记录表（现状 10 笔）</h4>';
+  html += '<table class="record-table"><thead><tr><th style="width:40px">#</th><th style="width:96px">日期</th><th style="width:110px">执行人</th><th style="width:110px">开始</th><th style="width:110px">结束</th><th style="width:96px">指标值</th><th>备注</th></tr></thead><tbody>';
+  for (var r=1;r<=10;r++) html += '<tr><td class="c">'+r+'</td><td><input></td><td><input></td><td><input></td><td><input></td><td><input></td><td><input></td></tr>';
+  html += '<tr style="background:#fef3c7"><td colspan="5" style="text-align:right"><b>平均（基线）</b></td><td><input></td><td>判断成败的标尺</td></tr></tbody></table>';
+  html += '<h4 style="margin:18px 0 6px;color:#166534">📋 表 B · 试点记录表（新方法 10 笔）</h4>';
+  html += '<table class="record-table"><thead><tr><th style="width:40px">#</th><th style="width:96px">日期</th><th style="width:110px">执行人</th><th style="width:110px">开始</th><th style="width:110px">结束</th><th style="width:96px">指标值</th><th>备注</th></tr></thead><tbody>';
+  for (var r2=1;r2<=10;r2++) html += '<tr><td class="c">'+r2+'</td><td><input></td><td><input></td><td><input></td><td><input></td><td><input></td><td><input></td></tr>';
+  html += '<tr style="background:#dcfce7"><td colspan="5" style="text-align:right"><b>平均（试点）</b></td><td><input></td><td>和表 A 对比</td></tr></tbody></table>';
+  html += '</div>';
+  return html;
+}
+
+function renderImprove(){
+  var a = state.analysis;
+  var sel = $("targetDomain");
+  var domain = sel ? sel.value : "战略与经营管理";
+  if (!FLOW_LIB[domain]) domain = "战略与经营管理";
+  state.tobeDomain = domain;
+  if (!a){
+    var txtEl = $("rawText");
+    a = analyzeLocal(state.rawText || (txtEl ? txtEl.value : "") || "尚未描述现状");
+    state.analysis = a;
+  }
+  state.tobe = buildToBe(domain);
+  var out = $("improveOut");
+  if (!out) return;
+  var html = "";
+  if (a.isIncomplete){
+    html += '<div class="incomplete-card">' +
+      '<h4>⚠️ 现状信息不足，无法生成改进方案</h4>' +
+      '<p class="lead">模块 3 的改进方案依赖模块 1 的现状诊断。请先回到模块 1，根据提示补充信息后再次分析。</p>' +
+      '<div class="tip"><b>✅ 快速补充方向：</b><br>谁在操作 ｜ 具体做什么事 ｜ 卡在哪里 ｜ 多久发生一次 ｜ 用什么工具 ｜ 造成什么后果</div>' +
+    '</div>';
+    out.innerHTML = html;
+    return;
+  }
+  html += '<h3 style="font-size:14px;margin:6px 0 0">改进建议（按优先级 + 分层）</h3>';
+  a.issues.forEach(function(it){
+    var p = it.priority || "中";
+    var c = p === "高" ? "" : (p === "中" ? "p2" : "p3");
+    var b = p === "高" ? "hi" : (p === "中" ? "mid" : "lo");
+    html += '<div class="card ' + c + '">' +
+      '<div class="layer">📍 ' + escHtml(it.layer || "未分层") + '</div>' +
+      '<h4><span class="badge ' + b + '">' + escHtml(p) + '优先级</span>' + escHtml(it.title) + '</h4>' +
+      '<div class="meta">🔎 ' + escHtml(it.evidence) + '</div>' +
+      '<div class="meta">⚠️ ' + escHtml(it.impact) + '</div>' +
+      '<div class="fix">✅ ' + escHtml(it.fix) + '</div>' +
+      '<div class="meta" style="margin-top:6px">📊 ' + escHtml(it.metric) + '</div>' +
+    '</div>';
+  });
+  html += '<h3 style="font-size:14px;margin:20px 0 0">目标业务流程（TO-BE）：' + escHtml(domain) + '</h3>';
+  html += '<p class="hint" style="margin:4px 0 8px">橙框节点 = 需要深度改进的环节，节点内标注了「应急 / 根因 / 预防」三个动作方向。</p>';
+  html += '<div class="chart" id="tobeChart"><div class="placeholder">渲染中…</div></div>';
+  html += '<div class="legend">' +
+    '<span><i class="dot" style="background:#fff7ed;border:2.5px solid #f97316"></i>需深度改进</span>' +
+    '<span><i class="dot" style="background:#fff;border:1.5px solid #cbd5e1"></i>保持原样</span>' +
+    '<span><span class="pill-start">开始</span>①号节点正上方</span>' +
+    '<span><span class="pill-end">结束</span>末尾节点正下方</span>' +
+  '</div>';
+  html += '<h3 style="font-size:14px;margin:22px 0 6px">关键问题深度改进方案（按层次展开，逐条执行）</h3>';
+  html += '<p class="hint" style="margin:0 0 8px">每个问题都拆成三块：<b>应急</b>（先止血）、<b>根因</b>（找原因）、<b>预防</b>（防复发）。<b>不管当前选的是哪个流程域，只要现状分析识别出的问题，都在这里展示</b>。</p>';
+  var displayList = [];
+  var seen = {};
+  for (var i=0;i<state.tobe.length;i++){
+    var t = state.tobe[i];
+    if (t.problemId && !seen[t.problemId]){
+      seen[t.problemId] = true;
+      displayList.push({ problemId: t.problemId, stepName: t.act, role: t.role, weight: DEEP_FIX_LIB[t.problemId].weight || 99, srcTag: "流程节点" });
+    }
+  }
+  if (a.issues){
+    for (var j=0;j<a.issues.length;j++){
+      var it2 = a.issues[j];
+      if (it2.problemId && !seen[it2.problemId]){
+        seen[it2.problemId] = true;
+        displayList.push({ problemId: it2.problemId, stepName: it2.title, role: "分析识别（" + (it2.layer || "未分层") + "）", weight: DEEP_FIX_LIB[it2.problemId].weight || 99, srcTag: "分析识别 · " + (it2.priority || "中") + "优先级" });
+      }
+    }
+  }
+  displayList.sort(function(x,y){ return (x.weight||99) - (y.weight||99); });
+  if (displayList.length){
+    displayList.forEach(function(d){
+      html += renderDeepFixCard(d.problemId, d.stepName, d.role, d.srcTag);
+    });
+  } else {
+    html += '<div class="err">暂未匹配到深度改进方案。</div>';
+  }
+  html += buildPilotPlan(a, domain, state.tobe);
+  out.innerHTML = html;
+  var tobeSteps = state.tobe.map(function(s){ return { role: s.role, act: s.act, deepFix: s.deepFix }; });
+  renderFlowSVG($("tobeChart"), tobeSteps, 'tobe');
+}
+
+function initSelects(){
+  var el1 = $("asIsDomain"), el2 = $("targetDomain");
+  var opts = "";
+  for (var d in FLOW_LIB){
+    if (FLOW_LIB.hasOwnProperty(d)) opts += '<option value="' + escAttr(d) + '">' + escHtml(d) + '</option>';
+  }
+  if (el1) el1.innerHTML = '<option value="">自动识别</option>' + opts;
+  if (el2){ el2.innerHTML = opts; el2.value = "项目管理与跨部门协同"; }
+}
+
+function updateCfgState(){
+  var cfg = getCfg(), el = $("cfgState");
+  if (!el) return;
+  el.textContent = cfg.key ? ("已配置 AI：" + (cfg.model || "gpt-4o-mini")) : "未配置 AI，使用内置规则引擎";
+}
+
+function bindEvents(){
+  var btnDemo = $("btnDemo");
+  if (btnDemo) btnDemo.addEventListener("click", function(){
+    var ta = $("rawText");
+    ta.value = "小红作为董事长助理，在一次降本增效的项目中担任统筹主导的角色，由于公司副总的存在就让这件事变得更复杂了，小红发消息询问副总项目进度，多次不予理睬，私下询问总是找不到人，总是遇到这样的情况，小红担心项目延期完不成，于是，就去董事长（老板）办公室反应情况，老板就把副总叫到办公室批评了一顿，事后，副总心里看小红不爽，觉得是小红在老板面前告状，后面只会越来越不配合。小红当前是在试用期，还没有正式书面的授权，在公司项目协调时调配不动人员是常态。";
+    state.rawText = ta.value;
+  });
+
+  var btnAnalyze = $("btnAnalyze");
+  if (btnAnalyze) btnAnalyze.addEventListener("click", function(){
+    var text = ($("rawText").value || "").trim();
+    if (!text){ $("analysisOut").innerHTML = '<div class="err">请先描述业务现状。</div>'; return; }
+    state.rawText = text;
+    var btn = $("btnAnalyze");
+    btn.disabled = true; btn.textContent = "分析中…";
+    $("analysisOut").innerHTML = '<div class="ok">正在分析，请稍候…</div>';
+    var cfg = getCfg();
+    var run = cfg.key ? analyzeLLM(text).catch(function(){ return analyzeLocal(text); }) : Promise.resolve(analyzeLocal(text));
+    run.then(function(a){
+      state.analysis = a;
+      renderAnalysis(a);
+      if (FLOW_LIB[a.domain]){
+        var d1 = $("asIsDomain"); if (d1) d1.value = a.domain;
+        var d2 = $("targetDomain"); if (d2) d2.value = a.domain;
+      }
+    }).catch(function(e){
+      $("analysisOut").innerHTML = '<div class="err">分析失败：' + escHtml(e && e.message ? e.message : String(e)) + '</div>';
+    }).then(function(){
+      btn.disabled = false; btn.textContent = "🔍 分析现状";
+    });
+  });
+
+  var btnGuess = $("btnGuess");
+  if (btnGuess) btnGuess.addEventListener("click", function(){
+    state.rawText = $("rawText").value || state.rawText; guessAsIs();
+  });
+  var btnAdd = $("btnAddStep");
+  if (btnAdd) btnAdd.addEventListener("click", function(){
+    state.asis.push({ role:"", act:"", pain:false }); renderAsIsTable();
+  });
+  var btnDraw = $("btnDrawAsIs");
+  if (btnDraw) btnDraw.addEventListener("click", function(){
+    state.rawText = $("rawText").value || state.rawText; drawAsIs();
+  });
+
+  var body = $("asIsBody");
+  if (body){
+    body.addEventListener("input", function(e){
+      var t = e.target;
+      if (!t || !t.getAttribute) return;
+      var i = t.getAttribute("data-i"), k = t.getAttribute("data-k");
+      if (i === null || !k) return;
+      var idx = parseInt(i,10);
+      if (state.asis[idx]) state.asis[idx][k] = t.value;
+    });
+    body.addEventListener("change", function(e){
+      var t = e.target;
+      if (!t || t.type !== "checkbox") return;
+      var idx = parseInt(t.getAttribute("data-i"),10);
+      if (state.asis[idx]) state.asis[idx].pain = t.checked;
+    });
+    body.addEventListener("click", function(e){
+      var t = e.target;
+      if (!t || !t.getAttribute) return;
+      var d = t.getAttribute("data-del");
+      if (d === null) return;
+      state.asis.splice(parseInt(d,10), 1); renderAsIsTable();
+    });
+  }
+
+  var btnImprove = $("btnImprove");
+  if (btnImprove) btnImprove.addEventListener("click", function(){
+    state.rawText = $("rawText").value || state.rawText;
+    if (!state.rawText){ $("improveOut").innerHTML = '<div class="err">请先在模块 1 描述业务现状。</div>'; return; }
+    if (!state.analysis){ state.analysis = analyzeLocal(state.rawText); renderAnalysis(state.analysis); }
+    var btn = $("btnImprove");
+    btn.disabled = true; btn.textContent = "生成中…";
+    try { renderImprove(); }
+    catch(err){ $("improveOut").innerHTML = '<div class="err">生成失败：' + escHtml(err && err.message ? err.message : String(err)) + '</div>'; }
+    btn.disabled = false; btn.textContent = "🚀 生成改进建议与目标流程";
+  });
+
+  var dlg = $("cfgDlg");
+  var btnCfg = $("btnCfg");
+  if (btnCfg) btnCfg.addEventListener("click", function(){
+    var cfg = getCfg();
+    $("cfgBase").value = cfg.base || ""; $("cfgKey").value = cfg.key || ""; $("cfgModel").value = cfg.model || "";
+    if (dlg && typeof dlg.showModal === "function") dlg.showModal(); else if (dlg) dlg.setAttribute("open","");
+  });
+  var btnSave = $("cfgSave");
+  if (btnSave) btnSave.addEventListener("click", function(){
+    localStorage.setItem("biz_flow_cfg", JSON.stringify({ base:$("cfgBase").value.trim(), key:$("cfgKey").value.trim(), model:$("cfgModel").value.trim() }));
+    updateCfgState();
+    if (dlg && typeof dlg.close === "function") dlg.close(); else if (dlg) dlg.removeAttribute("open");
+  });
+  var btnClear = $("cfgClear");
+  if (btnClear) btnClear.addEventListener("click", function(){
+    localStorage.removeItem("biz_flow_cfg");
+    $("cfgBase").value=""; $("cfgKey").value=""; $("cfgModel").value="";
+    updateCfgState();
+  });
+  var btnClose = $("cfgClose");
+  if (btnClose) btnClose.addEventListener("click", function(){
+    if (dlg && typeof dlg.close === "function") dlg.close(); else if (dlg) dlg.removeAttribute("open");
+  });
+}
+
+initSelects();
+updateCfgState();
+renderAsIsTable();
+bindEvents();
+</script>
+</body>
+</html>
